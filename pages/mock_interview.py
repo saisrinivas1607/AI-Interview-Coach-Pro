@@ -1,65 +1,85 @@
+
 import streamlit as st
 from services.question_service import QuestionService
 
 st.title("🎤 AI Mock Interview")
 
-resume_text = st.session_state.get(
-    "resume_text",
-    ""
+# Get data from session state
+resume_text = st.session_state.get("resume_text", "") or ""
+jd_text = st.session_state.get("jd_text", "") or ""
+
+resume_skills = st.session_state.get("resume_skills", []) or []
+jd_skills = st.session_state.get("jd_skills", []) or []
+
+# Additional skills
+st.subheader("Additional Skills")
+
+extra_skills = st.text_input(
+    "Enter skills you want to practise",
+    placeholder="e.g. Java, C, Spring Boot, Docker",
+    help=(
+        "Enter comma-separated skills. You can practise these "
+        "even if they are not in your resume or job description."
+    )
 )
 
-jd_text = st.session_state.get(
-    "jd_text",
-    ""
+# Show existing skills when available
+with st.expander("Resume and Job Description Skills", expanded=False):
+    st.write("**Resume Skills:**")
+    st.write(", ".join(resume_skills) or "No resume skills available.")
 
-)
+    st.write("**JD Skills:**")
+    st.write(", ".join(jd_skills) or "No job description skills available.")
 
-resume_skills = st.session_state.get(
-    "resume_skills",
-    []
-)
-
-jd_skills = st.session_state.get(
-    "jd_skills",
-    []
-)
-
-st.subheader("Resume Skills")
-st.write(", ".join(resume_skills))
-
-st.subheader("JD Skills")
-st.write(", ".join(jd_skills))
+# Question counts
+st.subheader("Question Settings")
 
 technical_count = st.number_input(
-    "Technical Questions",
-    min_value=1,
-    max_value=100,
-    value=5
+    "Number of Technical Questions",
+    min_value=50,
+    max_value=200,
+    value=50,
+    step=5
 )
 
-project_count = st.number_input(
-    "Project Questions",
-    min_value=1,
-    max_value=20,
-    value=3
-)
-
-hr_count = st.number_input(
-    "HR Questions",
-    min_value=1,
-    max_value=30,
-    value=2
-)
-
-if not resume_skills:
-    st.warning(
-        "Please upload a resume first."
+# Project questions are available only when a resume is present
+if resume_text.strip():
+    project_count = st.number_input(
+        "Number of Project Questions",
+        min_value=15,
+        max_value=50,
+        value=20,
+        step=5
     )
-    st.stop()
+else:
+    project_count = 0
+    st.caption(
+        "Project questions are available after you upload a resume."
+    )
 
-if not jd_skills:
+# HR questions are optional
+include_hr = st.checkbox(
+    "Include HR Interview Questions",
+    value=False,
+    help="Enable this option if you also want HR interview questions."
+)
+
+if include_hr:
+    hr_count = st.number_input(
+        "Number of HR Questions",
+        min_value=15,
+        max_value=50,
+        value=15,
+        step=5
+    )
+else:
+    hr_count = 0
+
+# Require at least one input source
+if not resume_text.strip() and not jd_text.strip() and not extra_skills.strip():
     st.info(
-        "No Job Description found. Questions will be generated based only on the resume."
+        "Upload a resume, provide a job description, "
+        "or enter additional skills to generate questions."
     )
 
 # Initialize interview history
@@ -67,40 +87,35 @@ if "interview_history" not in st.session_state:
     st.session_state["interview_history"] = []
 
 # Generate questions
-if st.button("Generate Questions"):
+if st.button("Generate Questions", type="primary"):
 
-    with st.spinner(
-        "Generating interview questions..."
-    ):
-
-       questions = QuestionService.generate_questions(
-            resume_text,
-            jd_text,
-            technical_count,
-            project_count,
-            hr_count
-    )
-    
-
-    st.session_state["generated_questions"] = questions
-
-    st.session_state["interview_history"].append(
-            questions
+    if not resume_text.strip() and not jd_text.strip() and not extra_skills.strip():
+        st.warning(
+            "Please provide a resume, job description, or additional skills."
         )
 
-# Show latest generated questions
+    else:
+        with st.spinner("Generating interview questions..."):
+
+            questions = QuestionService.generate_questions(
+                resume_text=resume_text,
+                jd_text=jd_text,
+                technical_count=int(technical_count),
+                project_count=int(project_count),
+                hr_count=int(hr_count),
+                extra_skills=extra_skills,
+                include_hr=include_hr
+            )
+
+        st.session_state["generated_questions"] = questions
+
+        st.session_state["interview_history"].append(questions)
+
+# Display latest questions
 if "generated_questions" in st.session_state:
+    st.subheader("Generated Interview Questions")
 
-    st.subheader(
-        "Generated Interview Questions"
-    )
-
-    st.markdown(
-        st.session_state["generated_questions"]
-    )
-
-# Download button
-if "generated_questions" in st.session_state:
+    st.markdown(st.session_state["generated_questions"])
 
     st.download_button(
         label="📥 Download Questions",
@@ -109,28 +124,14 @@ if "generated_questions" in st.session_state:
         mime="text/plain"
     )
 
-# Interview History
+# Interview history
 st.subheader("📜 Interview History")
 
-history = st.session_state.get(
-    "interview_history",
-    []
-)
+history = st.session_state.get("interview_history", [])
 
-for i, interview in enumerate(history):
-
-    with st.expander(
-        f"Interview {i+1}"
-    ):
-        st.markdown(interview)
-
-# Debug
-st.write("Resume Skills in Session:")
-st.write(
-    st.session_state.get("resume_skills")
-)
-
-st.write("JD Skills in Session:")
-st.write(
-    st.session_state.get("jd_skills")
-)
+if history:
+    for i, interview in enumerate(reversed(history)):
+        with st.expander(f"Interview {len(history) - i}"):
+            st.markdown(interview)
+else:
+    st.caption("Your generated interviews will appear here.")
