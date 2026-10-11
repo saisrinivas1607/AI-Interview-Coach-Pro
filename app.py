@@ -11,7 +11,7 @@ st.title("🎯 Sai's Interview Prep")
 st.subheader("Interview Preparation Platform")
 
 st.write("""
-Welcome to AI Interview Coach Pro.
+Welcome to Interview prepatation pro.
 
 Features:
 - Resume Analysis
