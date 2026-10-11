@@ -30,8 +30,11 @@ class ResumeService:
     ]
 
 
+    
     @classmethod
     def save_resume(cls, uploaded_file):
+        # Create the upload directory if it doesn't exist
+        cls.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
         file_path = cls.UPLOAD_DIR / uploaded_file.name
 
@@ -39,6 +42,7 @@ class ResumeService:
             file.write(uploaded_file.getbuffer())
 
         return file_path
+
 
     @classmethod
     def extract_text(cls, pdf_path):
@@ -69,8 +73,9 @@ class ResumeService:
                 skills.append(skill)
                 
 
+        
         email_match = re.search(
-            r'[\w\.-]+@[\w\.-]+\.\w+',
+            r'[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}',
             text
         )
 
@@ -78,6 +83,8 @@ class ResumeService:
             r'(\+91[- ]?)?[6-9]\d{9}',
             text
         )
+
+        
 
         lines = text.split("\n")
 
