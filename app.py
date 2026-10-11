@@ -1,14 +1,14 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="AI Interview Coach Pro",
+    page_title="",
     page_icon="🎯",
     layout="wide"
 )
 
-st.title("🎯 AI Interview Coach Pro")
+st.title("🎯 Sai's Interview Prep")
 
-st.subheader("AI-Powered Interview Preparation Platform")
+st.subheader("Interview Preparation Platform")
 
 st.write("""
 Welcome to AI Interview Coach Pro.

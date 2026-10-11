@@ -2,7 +2,7 @@
 import streamlit as st
 from services.question_service import QuestionService
 
-st.title("🎤 AI Mock Interview")
+st.title("🎤 Sai's Interview Prep")
 
 # Get data from session state
 resume_text = st.session_state.get("resume_text", "") or ""
